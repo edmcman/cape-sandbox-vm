@@ -1,0 +1,51 @@
+<domain type='kvm'>
+  <name>cape-win10</name>
+  <!-- 2GB RAM; adjust if needed -->
+  <memory unit='KiB'>2097152</memory>
+  <vcpu placement='static'>2</vcpu>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <!-- OVMF firmware matches what auto-windows-vm used to build the guest -->
+    <loader readonly='yes' type='pflash'>/usr/share/OVMF/OVMF_CODE_4M.ms.fd</loader>
+    <nvram>/var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd</nvram>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <!-- Hyper-V enlightenments for Windows performance; hypervisor flag
+         disabled so the guest cannot detect it is running in a VM -->
+    <hyperv mode='custom'>
+      <relaxed state='on'/>
+      <vapic state='on'/>
+      <spinlocks state='on' retries='8191'/>
+      <time state='on'/>
+    </hyperv>
+  </features>
+  <cpu mode='host-model'>
+    <feature policy='disable' name='hypervisor'/>
+  </cpu>
+  <clock offset='localtime'>
+    <timer name='hpet' present='no'/>
+    <timer name='hypervclock' present='yes'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>destroy</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <!-- Replaced by import-guest.sh -->
+      <source file='CAPE_QCOW2_PATH'/>
+      <target dev='hda' bus='ide'/>
+    </disk>
+    <interface type='network'>
+      <!-- Attaches to the 192.168.56.0/24 analysis network -->
+      <source network='cape'/>
+      <model type='e1000e'/>
+    </interface>
+    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'/>
+    <video>
+      <model type='vga'/>
+    </video>
+  </devices>
+</domain>

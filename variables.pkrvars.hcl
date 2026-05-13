@@ -1,0 +1,9 @@
+vm_name      = "cape-sandbox"
+hostname     = "cape-sandbox"
+ssh_username = "cape"
+ssh_password = "cape"
+cpus         = 4
+memory       = 8192
+disk_size    = 102400
+headless     = false
+update       = "true"
