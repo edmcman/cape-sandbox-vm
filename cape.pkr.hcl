@@ -59,7 +59,7 @@ locals {
   # Ubuntu 24.04 server ISO uses GRUB; 'c' drops to GRUB console
   boot_command = [
     "c<wait>",
-    "linux /casper/vmlinuz autoinstall ds='nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/' systemd.mask=ssh",
+    "linux /casper/vmlinuz autoinstall ds='nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/' systemd.mask=ssh console=ttyS0",
     "<enter><wait>",
     "initrd /casper/initrd<enter><wait>",
     "boot<enter>"
@@ -87,6 +87,10 @@ source "vmware-iso" "ubuntu" {
     # Expose VMX instructions to the guest for nested KVM
     "vhv.enable"              = "TRUE"
     "ethernet0.pciSlotNumber" = "32"
+    # Serial port for installer debug output
+    "serial0.present"         = "TRUE"
+    "serial0.fileType"        = "file"
+    "serial0.fileName"        = "serial.log"
   }
   vmx_remove_ethernet_interfaces = false
 }
@@ -117,6 +121,9 @@ source "virtualbox-iso" "ubuntu" {
     ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
     ["modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga"],
     ["modifyvm", "{{.Name}}", "--vram", "16"],
+    # Serial port for installer debug output
+    ["modifyvm", "{{.Name}}", "--uart1", "0x3f8", "4"],
+    ["modifyvm", "{{.Name}}", "--uartmode1", "file", "serial.log"],
   ]
 }
 
@@ -144,6 +151,7 @@ source "qemu" "ubuntu" {
   output_directory = "output-qemu-cape"
   qemuargs = [
     ["-cpu", "host"],
+    ["-serial", "file:serial.log"],
   ]
 }
 
@@ -170,7 +178,6 @@ build {
       "scripts/sshd.sh",
       "scripts/vmware.sh",
       "scripts/virtualbox.sh",
-      "scripts/kvm-setup.sh",
       "scripts/cape-install.sh",
       "scripts/cape-network.sh",
       "scripts/cleanup.sh",

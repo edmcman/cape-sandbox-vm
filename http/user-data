@@ -4,6 +4,10 @@ autoinstall:
 
   ssh:
     install-server: true
+    allow-pw: true
+
+  # Reboot (not poweroff) so packer can SSH in after installation
+  shutdown: reboot
 
   identity:
     realname: 'CAPE Sandbox'
@@ -21,32 +25,18 @@ autoinstall:
     - echo 'linux-generic-hwe-24.04' > /run/kernel-meta-package
 
   late-commands:
-    - >-
-      curtin in-target --
-      sed -i /etc/default/grub -e
-      's/GRUB_CMDLINE_LINUX_DEFAULT=".*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"/'
-    - curtin in-target -- update-grub
-
-    # Let NetworkManager handle network
-    - rm /target/etc/netplan/00-installer-config*yaml
-    - >-
-      printf "network:\n  version: 2\n  renderer: NetworkManager"
-      > /target/etc/netplan/01-network-manager-all.yaml
-
     # Remove filesystem tools not needed with direct storage layout
     - >-
       curtin in-target -- apt-get remove -y
       btrfs-progs cryptsetup* lvm2 xfsprogs
 
-    # Remove server packages not needed for CAPE host
+    # Remove packages not needed for CAPE host
     - >-
-      curtin in-target -- apt-get remove -y ubuntu-server ubuntu-server-minimal
+      curtin in-target -- apt-get remove -y
       byobu dmeventd finalrd kpartx mdadm ncurses-term needrestart open-iscsi
       sg3-utils sssd sosreport motd-news-config lxd-agent-loader landscape-common
 
-    - curtin in-target -- apt-get install -y cloud-init
     - curtin in-target -- apt-get autoremove -y
-    - curtin in-target -- systemctl disable systemd-networkd-wait-online.service
 
   error-commands:
     - tar -czf /run/installer-logs.tar.gz /var/log/installer/ /var/log/subiquity.log /var/log/cloud-init*.log /var/log/casper.log 2>/dev/null || true

@@ -34,13 +34,13 @@ Build a specific target:
 
 ```sh
 # QEMU/KVM (recommended on Linux)
-packer build -only=qemu.ubuntu -var-file=variables.pkrvars.hcl .
+packer build -only='cape-sandbox.qemu.ubuntu' -var-file=variables.pkrvars.hcl .
 
 # VMware
-packer build -only=vmware-iso.ubuntu -var-file=variables.pkrvars.hcl .
+packer build -only='cape-sandbox.vmware-iso.ubuntu' -var-file=variables.pkrvars.hcl .
 
 # VirtualBox
-packer build -only=virtualbox-iso.ubuntu -var-file=variables.pkrvars.hcl .
+packer build -only='cape-sandbox.virtualbox-iso.ubuntu' -var-file=variables.pkrvars.hcl .
 
 # All three
 packer build -var-file=variables.pkrvars.hcl .
