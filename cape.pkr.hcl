@@ -93,6 +93,7 @@ source "vmware-iso" "ubuntu" {
     "serial0.fileName"        = "serial.log"
   }
   vmx_remove_ethernet_interfaces = false
+  snapshot_name                  = "clean-install"
 }
 
 source "virtualbox-iso" "ubuntu" {
@@ -124,6 +125,9 @@ source "virtualbox-iso" "ubuntu" {
     # Serial port for installer debug output
     ["modifyvm", "{{.Name}}", "--uart1", "0x3f8", "4"],
     ["modifyvm", "{{.Name}}", "--uartmode1", "file", "serial.log"],
+  ]
+  vboxmanage_post = [
+    ["snapshot", "{{.Name}}", "take", "clean-install"],
   ]
 }
 
@@ -196,5 +200,10 @@ build {
       "scripts/cape-network.sh",
       "scripts/cleanup.sh",
     ]
+  }
+
+  post-processor "shell-local" {
+    only   = ["qemu.ubuntu"]
+    inline = ["qemu-img snapshot -c clean-install output-qemu-cape/${var.vm_name}"]
   }
 }
