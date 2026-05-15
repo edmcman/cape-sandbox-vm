@@ -13,7 +13,7 @@ bash -x kvm-qemu.sh all
 # Run CAPE's main installer (MongoDB, deps, CAPE itself) using uv (--use-uv must be
 # a CLI arg, not an env var — the env var sets USE_UV but never updates PYTHON_MGR).
 cd "$CAPE_ROOT/installer"
-bash -x cape2.sh base --use-uv
+bash -x cape2.sh base 192.168.56.1 --use-uv
 
 # Create dedicated analysis user account
 useradd -m -s /bin/bash cape-analysis || true
