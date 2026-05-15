@@ -19,9 +19,23 @@ virsh net-define /tmp/cape-net.xml
 virsh net-autostart cape
 virsh net-start cape
 
-# Patch CAPE config to use this interface if it already exists
+# Patch CAPE config for the analysis network
 if [[ -f /opt/CAPEv2/conf/kvm.conf ]]; then
     sed -i 's/^interface =.*/interface = virbr-cape/' /opt/CAPEv2/conf/kvm.conf
+    sed -i 's/^machines =.*/machines = cape-win10/' /opt/CAPEv2/conf/kvm.conf
+    cat >> /opt/CAPEv2/conf/kvm.conf <<'EOF'
+
+[cape-win10]
+label = cape-win10
+platform = windows
+ip = 192.168.56.10
+arch = x64
+tags = win10
+EOF
+fi
+
+if [[ -f /opt/CAPEv2/conf/cuckoo.conf ]]; then
+    sed -i 's/^ip = 192\.168\.1\.1/ip = 192.168.56.1/' /opt/CAPEv2/conf/cuckoo.conf
 fi
 
 # Allow cape user to capture on the analysis bridge
