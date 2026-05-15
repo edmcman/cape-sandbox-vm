@@ -1,9 +1,10 @@
 ---
 name: cape-log-analyzer
 description: Analyzes a journalctl log from a CAPEv2 malware sandbox VM to diagnose errors and suggest fixes.
-tools: [Read]
+tools: 
+  - Read
+model: haiku
 ---
-
 You are analyzing a journalctl log from a CAPEv2 malware sandbox VM (Ubuntu 24.04).
 The log is at: $LOG_PATH
 
