@@ -6,19 +6,22 @@
 
 CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
 
-# Clone CAPEv2 first so installers are available
-git clone https://github.com/kevoreilly/CAPEv2 "$CAPE_ROOT"
-
 # Run CAPE's KVM/QEMU setup (compiles QEMU with anti-VM patches)
 cd "$CAPE_ROOT/installer"
-bash kvm-qemu.sh base # ip?
+bash -x kvm-qemu.sh all
 
-# Run CAPE's main installer (MongoDB, deps, CAPE itself)
-# Fix poetry cache permissions — cape2.sh runs as root but poetry uses cape's cache
-mkdir -p /home/"${SSH_USERNAME}"/.cache/pypoetry
-chown -R "${SSH_USERNAME}":"${SSH_USERNAME}" /home/"${SSH_USERNAME}"/.cache
+# Install uv and create the project venv before cape2.sh — uv pip install requires a
+# venv to exist and cape2.sh doesn't create one when USE_UV=true.
+echo "[cape-install] installing uv via pip3"
+pip3 install uv --break-system-packages
+echo "[cape-install] creating uv venv at $CAPE_ROOT/.venv"
+sudo -u "${SSH_USERNAME}" /usr/local/bin/uv venv "$CAPE_ROOT/.venv"
+echo "[cape-install] venv created"
+
+# Run CAPE's main installer (MongoDB, deps, CAPE itself) using uv (--use-uv must be
+# a CLI arg, not an env var — the env var sets USE_UV but never updates PYTHON_MGR).
 cd "$CAPE_ROOT/installer"
-bash cape2.sh all
+bash -x cape2.sh base --use-uv
 
 # Create dedicated analysis user account
 useradd -m -s /bin/bash cape-analysis || true

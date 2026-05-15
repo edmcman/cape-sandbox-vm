@@ -163,6 +163,20 @@ build {
     "source.qemu.ubuntu",
   ]
 
+  provisioner "shell-local" {
+    command = "mkdir -p toupload && tar cf toupload/capev2.tar -C CAPEv2 ."
+  }
+
+  provisioner "file" {
+    source      = "toupload"
+    destination = "/tmp/"
+  }
+
+  provisioner "shell" {
+    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
+    inline          = ["mkdir -p /opt/CAPEv2 && tar xf /tmp/toupload/capev2.tar -C /opt/CAPEv2 && rm -rf /tmp/toupload"]
+  }
+
   provisioner "shell" {
     execute_command     = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
     expect_disconnect   = true
