@@ -3,15 +3,16 @@
   <!-- 2GB RAM; adjust if needed -->
   <memory unit='KiB'>2097152</memory>
   <vcpu placement='static'>2</vcpu>
-  <os firmware='efi'>
+  <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <!-- OVMF firmware matches what auto-windows-vm used to build the guest -->
-    <loader readonly='yes' type='pflash'>/usr/share/OVMF/OVMF_CODE_4M.ms.fd</loader>
-    <nvram>/var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd</nvram>
+    <!-- edk2 Secure Boot firmware; matches OVMF_CODE_4M.ms.fd used by auto-windows-vm -->
+    <loader readonly='yes' type='pflash'>/usr/share/qemu/edk2-x86_64-secure-code.fd</loader>
+    <nvram template='/usr/share/qemu/edk2-i386-vars.fd'>/var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd</nvram>
   </os>
   <features>
     <acpi/>
     <apic/>
+    <smm state='on'/>
     <!-- Hyper-V enlightenments for Windows performance; hypervisor flag
          disabled so the guest cannot detect it is running in a VM -->
     <hyperv mode='custom'>
@@ -35,7 +36,7 @@
       <driver name='qemu' type='qcow2'/>
       <!-- Replaced by import-guest.sh -->
       <source file='CAPE_QCOW2_PATH'/>
-      <target dev='hda' bus='ide'/>
+      <target dev='sda' bus='sata'/>
     </disk>
     <interface type='network'>
       <!-- Attaches to the 192.168.56.0/24 analysis network -->
