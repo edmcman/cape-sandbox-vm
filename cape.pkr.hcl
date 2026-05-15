@@ -206,6 +206,11 @@ build {
     destination = "/tmp/cape-win10.xml.tmpl"
   }
 
+  provisioner "shell" {
+    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
+    inline          = ["mkdir -p /tmp/win-guest"]
+  }
+
   provisioner "file" {
     source      = "auto-windows-vm/output-qemu-cape-win10/"
     destination = "/tmp/win-guest"
