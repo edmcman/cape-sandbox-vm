@@ -207,8 +207,7 @@ build {
   }
 
   provisioner "shell" {
-    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
-    inline          = ["mkdir -p /tmp/win-guest"]
+    inline = ["mkdir -p /tmp/win-guest"]
   }
 
   provisioner "file" {
