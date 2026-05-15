@@ -29,6 +29,7 @@ if [[ -f /opt/CAPEv2/conf/kvm.conf ]]; then
 label = cape-win10
 platform = windows
 ip = 192.168.56.10
+snapshot = cape-ready
 arch = x64
 tags = win10
 EOF
