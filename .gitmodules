@@ -1,3 +1,8 @@
 [submodule "CAPEv2"]
 	path = CAPEv2
 	url = https://github.com/kevoreilly/CAPEv2.git
+
+[submodule "auto-windows-vm"]
+	path = auto-windows-vm
+	url = https://github.com/edmcman/auto-windows-vm.git
+	branch = cape-sandbox

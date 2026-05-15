@@ -198,8 +198,34 @@ build {
       "scripts/virtualbox.sh",
       "scripts/cape-install.sh",
       "scripts/cape-network.sh",
-      "scripts/cleanup.sh",
     ]
+  }
+
+  provisioner "file" {
+    source      = "files/cape-win10.xml.tmpl"
+    destination = "/tmp/cape-win10.xml.tmpl"
+  }
+
+  provisioner "file" {
+    source      = "auto-windows-vm/output-qemu-cape-win10/"
+    destination = "/tmp/win-guest"
+  }
+
+  provisioner "shell" {
+    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
+    inline = [
+      "cp /tmp/win-guest/cape-win10 /var/lib/libvirt/images/cape-win10.qcow2",
+      "chown libvirt-qemu:libvirt-qemu /var/lib/libvirt/images/cape-win10.qcow2 2>/dev/null || true",
+      "mkdir -p /var/lib/libvirt/qemu/nvram",
+      "cp /tmp/win-guest/efivars.fd /var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd",
+      "sed 's|CAPE_QCOW2_PATH|/var/lib/libvirt/images/cape-win10.qcow2|g' /tmp/cape-win10.xml.tmpl | virsh define /dev/stdin",
+      "rm -rf /tmp/win-guest /tmp/cape-win10.xml.tmpl",
+    ]
+  }
+
+  provisioner "shell" {
+    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
+    scripts         = ["scripts/cleanup.sh"]
   }
 
   post-processor "shell-local" {

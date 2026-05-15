@@ -11,7 +11,7 @@ Packer project that builds a ready-to-run [CAPEv2](https://github.com/kevoreilly
 - Libvirt `cape` network on `192.168.56.0/24` for isolated guest traffic
 - `tcpdump` with `cap_net_raw` so CAPE can capture without root
 
-The Windows analysis guest is **not** baked in — import it post-deployment once it's ready (see [Importing the guest](#importing-the-guest)).
+The Windows analysis guest is baked in at build time from the [auto-windows-vm](auto-windows-vm) submodule — **you must build that first** (see [Prerequisites](#prerequisites)).
 
 ## Prerequisites
 
@@ -19,6 +19,8 @@ The Windows analysis guest is **not** baked in — import it post-deployment onc
 |------|---------|
 | [Packer](https://developer.hashicorp.com/packer/install) | ≥ 1.9 |
 | One of: VMware Workstation/Fusion, VirtualBox, or KVM/QEMU | — |
+
+**The Windows guest VM must be built before this image.** Use the [auto-windows-vm](auto-windows-vm) submodule and build the `cape-win10` QEMU target. The output (`auto-windows-vm/output-qemu-cape-win10/`) is uploaded and registered during the Packer build.
 
 **QEMU builds require KVM on the build host.** The build machine must have `/dev/kvm` available (bare-metal Linux or a VM with nested virtualization enabled).
 
@@ -72,18 +74,9 @@ packer build -only=qemu.ubuntu \
   -var-file=variables.pkrvars.hcl .
 ```
 
-## Importing the guest
+## Starting CAPE
 
-The Windows analysis guest is built separately by
-[auto-windows-vm](../auto-windows-vm) using the `cape-win10.jsonnet` target.
-Once that QCOW2 is ready, copy it to the running CAPE host and run:
-
-```sh
-sudo ./scripts/import-guest.sh /path/to/cape-win10.qcow2
-```
-
-This copies the image into libvirt storage and defines the `cape-win10` domain.
-Then finish the CAPE configuration:
+The Windows analysis guest ([auto-windows-vm](auto-windows-vm)) is baked into the image at build time and pre-registered with libvirt. After booting, finish the CAPE configuration:
 
 ```sh
 # Revert to the pre-analysis snapshot
