@@ -233,7 +233,7 @@ build {
       "virsh start cape-win10",
       "echo 'Waiting for CAPE agent on 192.168.56.10:8000...'",
       "timeout 300 bash -c 'until nc -z 192.168.56.10 8000 2>/dev/null; do sleep 5; done'",
-      "virsh snapshot-create-as --domain cape-win10 --name cape-ready --description 'CAPE analysis baseline' --live --atomic",
+      "virsh snapshot-create-as --domain cape-win10 --name cape-ready --description 'CAPE analysis baseline' --live",
       "virsh shutdown --domain cape-win10 --mode acpi",
       "timeout 120 bash -c 'until virsh domstate cape-win10 | grep -q \"shut off\"; do sleep 3; done'",
     ]
