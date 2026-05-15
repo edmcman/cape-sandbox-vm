@@ -10,14 +10,6 @@ CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
 cd "$CAPE_ROOT/installer"
 bash -x kvm-qemu.sh all
 
-# Install uv and create the project venv before cape2.sh — uv pip install requires a
-# venv to exist and cape2.sh doesn't create one when USE_UV=true.
-echo "[cape-install] installing uv via pip3"
-pip3 install uv --break-system-packages
-echo "[cape-install] creating uv venv at $CAPE_ROOT/.venv"
-sudo -u "${SSH_USERNAME}" /usr/local/bin/uv venv "$CAPE_ROOT/.venv"
-echo "[cape-install] venv created"
-
 # Run CAPE's main installer (MongoDB, deps, CAPE itself) using uv (--use-uv must be
 # a CLI arg, not an env var — the env var sets USE_UV but never updates PYTHON_MGR).
 cd "$CAPE_ROOT/installer"
