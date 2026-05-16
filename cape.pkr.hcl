@@ -200,6 +200,7 @@ build {
       "SSH_PASSWORD=${var.ssh_password}",
       "WIN10_GUEST_MAC=${var.win10_guest_mac}",
       "WIN10_GUEST_IP=${var.win10_guest_ip}",
+      "WIN10_GUEST_GATEWAY=${var.win10_guest_gateway}",
     ]
     scripts = [
       "scripts/update.sh",
