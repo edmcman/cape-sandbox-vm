@@ -176,7 +176,7 @@ build {
   ]
 
   provisioner "shell-local" {
-    command = "mkdir -p toupload && tar cf toupload/capev2.tar -C CAPEv2 ."
+    command = "mkdir -p toupload && tar cf toupload/capev2.tar -C CAPEv2 . && tar cf toupload/conf-overrides.tar conf-overrides/"
   }
 
   provisioner "file" {
@@ -186,7 +186,7 @@ build {
 
   provisioner "shell" {
     execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
-    inline          = ["mkdir -p /opt/CAPEv2 && tar xf /tmp/toupload/capev2.tar -C /opt/CAPEv2 && rm -rf /tmp/toupload"]
+    inline          = ["mkdir -p /opt/CAPEv2 && tar xf /tmp/toupload/capev2.tar -C /opt/CAPEv2 && tar xf /tmp/toupload/conf-overrides.tar -C /tmp && rm -rf /tmp/toupload"]
   }
 
   provisioner "shell" {
@@ -208,6 +208,7 @@ build {
       "scripts/virtualbox.sh",
       "scripts/cape-install.sh",
       "scripts/cape-network.sh",
+      "scripts/apply-config-overrides.sh",
     ]
   }
 

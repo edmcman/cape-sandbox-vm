@@ -53,5 +53,22 @@ All settings have working defaults. To customize before building:
 
 - **CAPE VM** (CPUs, memory, disk, credentials, build options): `variables.pkrvars.hcl`
 - **Windows guest** (network, disk, OS settings): `auto-windows-vm/packer-templates/cape-win10.jsonnet`
+- **CAPE settings** (reporting, processing, timeouts, etc.): `conf-overrides/`
 
 The Windows guest network settings (`win10_guest_*`) in `variables.pkrvars.hcl` must stay in sync with the values baked into the Windows guest image — if you change them, rebuild both images.
+
+### CAPE config overrides
+
+Place partial `.conf` files in `conf-overrides/` using the same filenames as CAPE's config files (e.g. `cuckoo.conf`, `reporting.conf`). Only include the sections and keys you want to change — CAPE merges them with its defaults at runtime via its `custom/conf/` mechanism.
+
+Example — enable the MongoDB reporter and increase the analysis timeout:
+
+```ini
+# conf-overrides/reporting.conf
+[mongodb]
+enabled = yes
+
+# conf-overrides/cuckoo.conf
+[timeouts]
+default = 120
+```
