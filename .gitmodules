@@ -1,6 +1,6 @@
 [submodule "CAPEv2"]
 	path = CAPEv2
-	url = https://github.com/kevoreilly/CAPEv2.git
+	url = https://github.com/edmcman/CAPEv2.git
 
 [submodule "auto-windows-vm"]
 	path = auto-windows-vm
