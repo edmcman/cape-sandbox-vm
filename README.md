@@ -1,117 +1,57 @@
 # cape-sandbox-vm
 
-Packer project that builds a ready-to-run [CAPEv2](https://github.com/kevoreilly/CAPEv2) malware sandbox host VM running Ubuntu 24.04 LTS. The host uses KVM/QEMU to run a Windows analysis guest.
+Packer project that builds an Ubuntu 24.04 VM running [CAPEv2](https://github.com/kevoreilly/CAPEv2) malware sandbox. CAPE uses KVM to run a Windows 10 analysis guest inside the VM, so **nested virtualization must be enabled** on the build host or hypervisor.
 
-## What gets built
+## Quick Start
 
-- Ubuntu 24.04 LTS server (no desktop)
-- KVM/QEMU/libvirt with nested virtualization enabled
-- CAPEv2 cloned to `/opt/CAPEv2/` with Python venv and dependencies installed
-- MongoDB 7.0 and PostgreSQL configured
-- Libvirt `cape` network on `192.168.56.0/24` for isolated guest traffic
-- `tcpdump` with `cap_net_raw` so CAPE can capture without root
+Requires [Packer](https://developer.hashicorp.com/packer/install) ≥ 1.9, [Jsonnet](https://github.com/google/jsonnet), and `/dev/kvm` on the build host.
 
-The Windows analysis guest is baked in at build time from the [auto-windows-vm](auto-windows-vm) submodule — **you must build that first** (see [Prerequisites](#prerequisites)).
+1. **Clone with submodules**
 
-## Prerequisites
+   ```sh
+   git clone --recurse-submodules https://github.com/edmcman/cape-sandbox-vm
+   ```
 
-| Tool | Version |
-|------|---------|
-| [Packer](https://developer.hashicorp.com/packer/install) | ≥ 1.9 |
-| One of: VMware Workstation/Fusion, VirtualBox, or KVM/QEMU | — |
+2. **(Optional) Adjust configuration** — see [Configuration](#configuration).
 
-**The Windows guest VM must be built before this image.** Use the [auto-windows-vm](auto-windows-vm) submodule and build the `cape-win10` QEMU target. The output (`auto-windows-vm/output-qemu-cape-win10/`) is uploaded and registered during the Packer build.
+3. **Initialize Packer plugins**
 
-**QEMU builds require KVM on the build host.** The build machine must have `/dev/kvm` available (bare-metal Linux or a VM with nested virtualization enabled).
+   ```sh
+   packer init .
+   ```
 
-## Building
+4. **Build the Windows 10 analysis guest**
 
-Install plugins once:
+   ```sh
+   # Fish
+   packer build -only=qemu (jsonnet packer-templates/cape-win10.jsonnet | psub) auto-windows-vm/
 
-```
-packer init .
-```
+   # Bash
+   packer build -only=qemu <(jsonnet packer-templates/cape-win10.jsonnet) auto-windows-vm/
+   ```
 
-Build a specific target:
+5. **Build the CAPE sandbox VM**
 
-```sh
-# QEMU/KVM (recommended on Linux)
-packer build -only='cape-sandbox.qemu.ubuntu' -var-file=variables.pkrvars.hcl .
+   ```sh
+   # QEMU/KVM (recommended)
+   packer build -only='cape-sandbox.qemu.ubuntu' -var-file=variables.pkrvars.hcl .
 
-# VMware
-packer build -only='cape-sandbox.vmware-iso.ubuntu' -var-file=variables.pkrvars.hcl .
+   # VMware
+   packer build -only='cape-sandbox.vmware-iso.ubuntu' -var-file=variables.pkrvars.hcl .
 
-# VirtualBox
-packer build -only='cape-sandbox.virtualbox-iso.ubuntu' -var-file=variables.pkrvars.hcl .
+   # VirtualBox
+   packer build -only='cape-sandbox.virtualbox-iso.ubuntu' -var-file=variables.pkrvars.hcl .
+   ```
 
-# All three
-packer build -var-file=variables.pkrvars.hcl .
-```
+   The build registers the Windows guest with libvirt, takes the analysis snapshot, and configures CAPE automatically.
 
-Output is written to `output-qemu-cape/`, `output-vmware-cape/`, or `output-vbox-cape/`.
+6. **Boot the VM** in your hypervisor. The web UI is at `http://<vm-ip>:8000`.
 
-## Variables
+## Configuration
 
-Override any variable in `variables.pkrvars.hcl` or on the command line with `-var`:
+All settings have working defaults. To customize before building:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `vm_name` | `cape-sandbox` | VM name |
-| `ssh_username` | `cape` | Host OS login |
-| `ssh_password` | `cape` | Host OS password |
-| `cpus` | `4` | vCPUs (host + guest combined; ≥ 4 recommended) |
-| `memory` | `8192` | RAM in MB (host + guest combined; ≥ 8192 recommended) |
-| `disk_size` | `102400` | Disk in MB (100 GB) |
-| `headless` | `false` | Hide VM console during build |
-| `update` | `true` | Run `dist-upgrade` during build |
+- **CAPE VM** (CPUs, memory, disk, credentials, build options): `variables.pkrvars.hcl`
+- **Windows guest** (network, disk, OS settings): `auto-windows-vm/packer-templates/cape-win10.jsonnet`
 
-Example — build headless with more RAM:
-
-```sh
-packer build -only=qemu.ubuntu \
-  -var="headless=true" \
-  -var="memory=16384" \
-  -var-file=variables.pkrvars.hcl .
-```
-
-## Starting CAPE
-
-The Windows analysis guest ([auto-windows-vm](auto-windows-vm)) is baked into the image at build time and pre-registered with libvirt. After booting, finish the CAPE configuration:
-
-```sh
-# Revert to the pre-analysis snapshot
-virsh snapshot-revert cape-win10 cape-ready
-
-# Edit CAPE config
-$EDITOR /opt/CAPEv2/conf/kvm.conf      # set machines = cape-win10
-$EDITOR /opt/CAPEv2/conf/cuckoo.conf   # review resultserver_ip (should be 192.168.56.1)
-
-# Start CAPE
-cd /opt/CAPEv2
-source venv/bin/activate
-python3 cuckoo.py
-```
-
-The web UI is at `http://<host-ip>:8000` once CAPE is running.
-
-## Network layout
-
-```
-  Build host / hypervisor
-  └── CAPE sandbox VM (192.168.x.x — DHCP from hypervisor)
-        └── libvirt bridge virbr-cape (192.168.56.1)
-              └── Windows guest (192.168.56.10 — static)
-                    └── CAPE agent on :8000
-```
-
-All guest traffic is NATed through the bridge. To isolate the guest from the internet, set `forward mode='route'` or remove the `<forward/>` element in `files/cape-win10.xml.tmpl` before importing.
-
-## Nested virtualization
-
-| Hypervisor | How enabled |
-|-----------|-------------|
-| VMware | `vhv.enable = TRUE` in VMX |
-| VirtualBox | `--nested-hw-virt on` |
-| QEMU/KVM | `-cpu host` (inherits host VMX/SVM flags) |
-
-The KVM nested config is persisted in `/etc/modprobe.d/kvm-nested.conf` inside the VM so it survives reboots.
+The Windows guest network settings (`win10_guest_*`) in `variables.pkrvars.hcl` must stay in sync with the values baked into the Windows guest image — if you change them, rebuild both images.
