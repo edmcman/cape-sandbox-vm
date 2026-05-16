@@ -240,7 +240,7 @@ build {
     inline = [
       "virsh start cape-win10",
       "echo 'Waiting for CAPE agent on ${var.win10_guest_ip}:8000...'",
-      "timeout 300 bash -c 'until nc -z ${var.win10_guest_ip} 8000 2>/dev/null; do sleep 5; done'",
+      "timeout 300 bash -c 'until nc -z ${var.win10_guest_ip} 8000 2>/dev/null; do sleep 5; done' || echo 'WARNING: CAPE agent did not respond on ${var.win10_guest_ip}:8000 within 300s -- snapshot will be taken without a running agent'",
       "mkdir -p /var/lib/libvirt/qemu/snapshot/cape-win10",
       "virsh snapshot-create-as --domain cape-win10 --name cape-ready --description 'CAPE analysis baseline' --memspec file=/var/lib/libvirt/qemu/snapshot/cape-win10/cape-ready.mem,snapshot=external --diskspec sda,snapshot=external --live",
       "virsh shutdown --domain cape-win10 --mode acpi",

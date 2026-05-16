@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
 # Define the CAPE analysis network via libvirt (192.168.56.0/24, NAT)
-# The Windows guest is statically assigned 192.168.56.10 by auto-windows-vm's set-static-ip.ps1
+# The Windows guest is statically assigned 192.168.56.10 by auto-windows-vm's disable-winrm-and-shutdown.ps1 (-StaticIP flag)
 cat > /tmp/cape-net.xml <<'EOF'
 <network>
   <name>cape</name>
