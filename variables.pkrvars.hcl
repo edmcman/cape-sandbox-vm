@@ -1,4 +1,10 @@
 vm_name      = "cape-sandbox"
+
+# Windows 10 guest network config — must match cape-win10.jsonnet in auto-windows-vm.
+win10_guest_mac     = "52:54:00:ca:fe:10"
+win10_guest_ip      = "192.168.56.10"
+win10_guest_gateway = "192.168.56.1"
+win10_guest_prefix  = "24"
 hostname     = "cape-sandbox"
 ssh_username = "cape"
 ssh_password = "cape"

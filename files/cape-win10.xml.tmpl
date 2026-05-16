@@ -40,6 +40,8 @@
     </disk>
     <interface type='network'>
       <!-- Attaches to the 192.168.56.0/24 analysis network -->
+      <!-- MAC must match win10_guest_mac in variables.pkrvars.hcl and cape-win10.jsonnet -->
+      <mac address='CAPE_WIN10_GUEST_MAC'/>
       <source network='cape'/>
       <model type='e1000e'/>
     </interface>

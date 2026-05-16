@@ -51,6 +51,14 @@ variable "update" {
   type    = string
   default = "true"
 }
+variable "win10_guest_mac" {
+  type    = string
+  default = "52:54:00:ca:fe:10"
+}
+variable "win10_guest_ip" {
+  type    = string
+  default = "192.168.56.10"
+}
 
 locals {
   iso_url      = "https://releases.ubuntu.com/24.04/ubuntu-24.04.4-live-server-amd64.iso"
@@ -222,7 +230,7 @@ build {
       "chown libvirt-qemu:libvirt-qemu /var/lib/libvirt/images/cape-win10.qcow2 2>/dev/null || true",
       "mkdir -p /var/lib/libvirt/qemu/nvram",
       "cp /tmp/win-guest/efivars.fd /var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd",
-      "sed 's|CAPE_QCOW2_PATH|/var/lib/libvirt/images/cape-win10.qcow2|g' /tmp/cape-win10.xml.tmpl | virsh define /dev/stdin",
+      "sed 's|CAPE_QCOW2_PATH|/var/lib/libvirt/images/cape-win10.qcow2|g; s|CAPE_WIN10_GUEST_MAC|${var.win10_guest_mac}|g' /tmp/cape-win10.xml.tmpl | virsh define /dev/stdin",
       "rm -rf /tmp/win-guest /tmp/cape-win10.xml.tmpl",
     ]
   }
@@ -231,9 +239,10 @@ build {
     execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
     inline = [
       "virsh start cape-win10",
-      "echo 'Waiting for CAPE agent on 192.168.56.10:8000...'",
-      "timeout 300 bash -c 'until nc -z 192.168.56.10 8000 2>/dev/null; do sleep 5; done'",
-      "virsh snapshot-create-as --domain cape-win10 --name cape-ready --description 'CAPE analysis baseline' --live",
+      "echo 'Waiting for CAPE agent on ${var.win10_guest_ip}:8000...'",
+      "timeout 300 bash -c 'until nc -z ${var.win10_guest_ip} 8000 2>/dev/null; do sleep 5; done'",
+      "mkdir -p /var/lib/libvirt/qemu/snapshot/cape-win10",
+      "virsh snapshot-create-as --domain cape-win10 --name cape-ready --description 'CAPE analysis baseline' --memspec file=/var/lib/libvirt/qemu/snapshot/cape-win10/cape-ready.mem,snapshot=external --diskspec sda,snapshot=external --live",
       "virsh shutdown --domain cape-win10 --mode acpi",
       "timeout 120 bash -c 'until virsh domstate cape-win10 | grep -q \"shut off\"; do sleep 3; done'",
     ]
