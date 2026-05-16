@@ -1,8 +1,9 @@
 #!/bin/bash -eux
 
-# Define the CAPE analysis network via libvirt (192.168.56.0/24, NAT)
-# The Windows guest is statically assigned 192.168.56.10 by auto-windows-vm's disable-winrm-and-shutdown.ps1 (-StaticIP flag)
-cat > /tmp/cape-net.xml <<'EOF'
+# Define the CAPE analysis network via libvirt (192.168.56.0/24, NAT).
+# DHCP reservation ensures the guest gets the right IP even if Windows
+# falls back to DHCP (e.g. due to firmware/NIC identity mismatch).
+cat > /tmp/cape-net.xml <<EOF
 <network>
   <name>cape</name>
   <forward mode='nat'/>
@@ -10,6 +11,7 @@ cat > /tmp/cape-net.xml <<'EOF'
   <ip address='192.168.56.1' netmask='255.255.255.0'>
     <dhcp>
       <range start='192.168.56.100' end='192.168.56.200'/>
+      <host mac='${WIN10_GUEST_MAC}' ip='${WIN10_GUEST_IP}'/>
     </dhcp>
   </ip>
 </network>

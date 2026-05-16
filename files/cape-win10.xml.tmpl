@@ -5,9 +5,10 @@
   <vcpu placement='static'>2</vcpu>
   <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <!-- edk2 Secure Boot firmware; matches OVMF_CODE_4M.ms.fd used by auto-windows-vm -->
-    <loader readonly='yes' type='pflash'>/usr/share/qemu/edk2-x86_64-secure-code.fd</loader>
-    <nvram template='/usr/share/qemu/edk2-i386-vars.fd'>/var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd</nvram>
+    <!-- Must match firmware used by auto-windows-vm (OVMF_CODE_4M.ms.fd) so Windows
+         sees the same PCI layout and preserves NIC identity / static IP on restore. -->
+    <loader readonly='yes' type='pflash'>/usr/share/OVMF/OVMF_CODE_4M.ms.fd</loader>
+    <nvram template='/usr/share/OVMF/OVMF_VARS_4M.ms.fd'>/var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd</nvram>
   </os>
   <features>
     <acpi/>

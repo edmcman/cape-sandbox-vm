@@ -198,6 +198,8 @@ build {
       "UPDATE=${var.update}",
       "SSH_USERNAME=${var.ssh_username}",
       "SSH_PASSWORD=${var.ssh_password}",
+      "WIN10_GUEST_MAC=${var.win10_guest_mac}",
+      "WIN10_GUEST_IP=${var.win10_guest_ip}",
     ]
     scripts = [
       "scripts/update.sh",

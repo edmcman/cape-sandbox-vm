@@ -6,6 +6,10 @@
 
 CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
 
+# OVMF must match the firmware used by auto-windows-vm (OVMF_CODE_4M.ms.fd)
+# so Windows sees the same PCI layout and preserves its static IP / NIC identity.
+apt-get install -y ovmf
+
 # Run CAPE's KVM/QEMU setup (compiles QEMU with anti-VM patches)
 cd "$CAPE_ROOT/installer"
 bash -x kvm-qemu.sh all
