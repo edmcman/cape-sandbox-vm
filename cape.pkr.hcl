@@ -59,6 +59,10 @@ variable "win10_guest_ip" {
   type    = string
   default = "192.168.56.10"
 }
+variable "win10_guest_gateway" {
+  type    = string
+  default = "192.168.56.1"
+}
 
 locals {
   iso_url      = "https://releases.ubuntu.com/24.04/ubuntu-24.04.4-live-server-amd64.iso"
