@@ -209,6 +209,7 @@ build {
     scripts = [
       "scripts/update.sh",
       "scripts/sshd.sh",
+      "scripts/avahi.sh",
       "scripts/vmware.sh",
       "scripts/virtualbox.sh",
       "scripts/cape-install.sh",

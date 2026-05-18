@@ -11,6 +11,10 @@ if [ -d "/var/lib/dhcp" ]; then
     rm -f /var/lib/dhcp/*
 fi
 
+echo "==> Cleaning up avahi state"
+rm -f /var/lib/avahi-autoipd/*.cache 2>/dev/null || true
+rm -f /var/lib/avahi/host-hostname 2>/dev/null || true
+
 echo "==> Blanking systemd machine-id (unique ID regenerated on first boot)"
 if [ -f "/etc/machine-id" ]; then
     truncate -s 0 "/etc/machine-id"
