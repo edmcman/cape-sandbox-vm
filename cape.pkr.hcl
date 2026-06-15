@@ -214,6 +214,7 @@ build {
       "scripts/cape-install.sh",
       "scripts/cape-network.sh",
       "scripts/apply-config-overrides.sh",
+      "scripts/cape-mcp.sh",
     ]
   }
 
