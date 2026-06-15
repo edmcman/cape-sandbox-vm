@@ -2,9 +2,8 @@
 
 CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
 
-# Install MCP optional dependencies (fastmcp, httpx)
-cd "$CAPE_ROOT"
-sudo -u cape /usr/local/bin/uv pip install .[mcp]
+# Install MCP optional dependencies (fastmcp, httpx) into CAPE's venv
+sudo -u cape /usr/local/bin/uv sync --no-install-project --directory "$CAPE_ROOT" --extra mcp
 
 # Install cape-mcp systemd service
 cat > /lib/systemd/system/cape-mcp.service <<EOF
