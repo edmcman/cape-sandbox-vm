@@ -214,6 +214,7 @@ build {
       "scripts/virtualbox.sh",
       "scripts/cape-install.sh",
       "scripts/cape-network.sh",
+      "scripts/inetsim.sh",
       "scripts/apply-config-overrides.sh",
     ]
   }
