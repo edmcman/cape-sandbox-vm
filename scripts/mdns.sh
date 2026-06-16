@@ -34,8 +34,8 @@ shopt -s nullglob
 units=(/run/systemd/network/*.network)
 
 if [ ${#units[@]} -eq 0 ]; then
-    echo "enable-mdns-links: no systemd-networkd .network units found, nothing to do"
-    exit 0
+    echo "enable-mdns-links: no systemd-networkd .network units found; cannot enable link-level mDNS"
+    exit 1
 fi
 
 for unit_path in "${units[@]}"; do
