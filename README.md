@@ -45,7 +45,7 @@ Requires [Packer](https://developer.hashicorp.com/packer/install) ≥ 1.9, [Json
 
    The build registers the Windows guest with libvirt, takes the analysis snapshot, and configures CAPE automatically.
 
-6. **Boot the VM** in your hypervisor. The web UI is at `http://<vm-ip>:8000`.
+6. **Boot the VM** in your hypervisor. The web UI is at `http://cape-sandbox.local:8000` (via mDNS) or `http://<vm-ip>:8000`.
 
 ## Configuration
 
