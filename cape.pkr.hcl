@@ -209,10 +209,12 @@ build {
     scripts = [
       "scripts/update.sh",
       "scripts/sshd.sh",
+      "scripts/mdns.sh",
       "scripts/vmware.sh",
       "scripts/virtualbox.sh",
       "scripts/cape-install.sh",
       "scripts/cape-network.sh",
+      "scripts/inetsim.sh",
       "scripts/apply-config-overrides.sh",
     ]
   }
