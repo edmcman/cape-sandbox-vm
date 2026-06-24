@@ -59,11 +59,11 @@ The Windows guest network settings (`win10_guest_*`) in `variables.pkrvars.hcl` 
 
 ### Output format (Vagrant box)
 
-By default the build leaves the raw builder artifacts in `output-*/` (the `cape-sandbox` qcow2/vmdk/vdi plus the `clean-install` snapshot). To instead package the VM into a Vagrant `.box` (libvirt/VirtualBox/vmware, with nested virt enabled via `files/vagrantfile.template`), build with:
+By default the build leaves the raw builder artifacts in `output-*/` (the `cape-sandbox` qcow2/vmdk/vdi plus the `clean-install` snapshot). To instead package the VM into a Vagrant `.box` (libvirt/VirtualBox/vmware, with nested virt enabled via `files/vagrantfile.template`), add `-var enable_vagrant=true`, e.g.,:
 
     packer build -only='cape-sandbox.qemu.ubuntu' -var-file=variables.pkrvars.hcl -var enable_vagrant=true .
 
-Add `-var keep_vagrant_input=true` to keep `output-*/` alongside the `.box`. Both toggles live in `variables.pkrvars.hcl`.
+Additionally add `-var keep_vagrant_input=true` to keep the `output-*/` directory alongside the `.box` file.
 
 ### CAPE config overrides
 
