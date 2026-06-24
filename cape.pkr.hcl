@@ -12,6 +12,10 @@ packer {
       source  = "github.com/hashicorp/qemu"
       version = "~> 1"
     }
+    vagrant = {
+      source  = "github.com/hashicorp/vagrant"
+      version = "~> 1"
+    }
   }
 }
 
@@ -62,6 +66,14 @@ variable "win10_guest_ip" {
 variable "win10_guest_gateway" {
   type    = string
   default = "192.168.56.1"
+}
+variable "enable_vagrant" {
+  type    = bool
+  default = false
+}
+variable "keep_vagrant_input" {
+  type    = bool
+  default = false
 }
 
 locals {
@@ -266,5 +278,12 @@ build {
   post-processor "shell-local" {
     only   = ["qemu.ubuntu"]
     inline = ["qemu-img snapshot -c clean-install output-qemu-cape/${var.vm_name}"]
+  }
+
+  post-processor "vagrant" {
+    only                = var.enable_vagrant ? [] : ["__vagrant_disabled__"]
+    keep_input_artifact = var.keep_vagrant_input
+    vagrantfile_template = "files/vagrantfile.template"
+    output               = "${var.vm_name}-{{.Provider}}.box"
   }
 }

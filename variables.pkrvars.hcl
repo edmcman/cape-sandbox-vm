@@ -13,3 +13,7 @@ memory       = 8192
 disk_size    = 102400
 headless     = false
 update       = "true"
+
+# Vagrant box packaging. Default: keep raw output-*/ artifacts, no .box.
+enable_vagrant     = false
+keep_vagrant_input  = false  # set true with enable_vagrant=true to keep output-*/ AND the .box

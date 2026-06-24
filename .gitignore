@@ -1,4 +1,5 @@
 *.log
+*.box
 output-*/
 auto-windows-vm/output-*/
 toupload/capev2.tar
