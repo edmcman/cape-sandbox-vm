@@ -107,9 +107,9 @@ source "vmware-iso" "ubuntu" {
   ssh_timeout      = "7200s"
   shutdown_command = "echo '${var.ssh_password}' | sudo -S shutdown -P now"
   output_directory = "output-vmware-cape"
+  # Expose VMX instructions to the guest for nested KVM
+  vhv_enabled                = true
   vmx_data = {
-    # Expose VMX instructions to the guest for nested KVM
-    "vhv.enable"              = "TRUE"
     "ethernet0.pciSlotNumber" = "32"
     # Serial port for installer debug output
     "serial0.present"         = "TRUE"
