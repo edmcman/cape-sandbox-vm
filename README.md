@@ -57,6 +57,14 @@ All settings have working defaults. To customize before building:
 
 The Windows guest network settings (`win10_guest_*`) in `variables.pkrvars.hcl` must stay in sync with the values baked into the Windows guest image — if you change them, rebuild both images.
 
+### Output format (Vagrant box)
+
+By default the build leaves the raw builder artifacts in `output-*/` (the `cape-sandbox` qcow2/vmdk/vdi plus the `clean-install` snapshot). To instead package the VM into a Vagrant `.box` (libvirt/VirtualBox/vmware, with nested virt enabled via `files/vagrantfile.template`), build with:
+
+    packer build -only='cape-sandbox.qemu.ubuntu' -var-file=variables.pkrvars.hcl -var enable_vagrant=true .
+
+Add `-var keep_vagrant_input=true` to keep `output-*/` alongside the `.box`. Both toggles live in `variables.pkrvars.hcl`.
+
 ### CAPE config overrides
 
 Place partial `.conf` files in `conf-overrides/` using the same filenames as CAPE's config files (e.g. `cuckoo.conf`, `reporting.conf`). Only include the sections and keys you want to change — CAPE merges them with its defaults at runtime via its `custom/conf/` mechanism.

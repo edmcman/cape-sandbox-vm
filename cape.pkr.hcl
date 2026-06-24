@@ -67,6 +67,14 @@ variable "win10_guest_gateway" {
   type    = string
   default = "192.168.56.1"
 }
+variable "enable_vagrant" {
+  type    = bool
+  default = false
+}
+variable "keep_vagrant_input" {
+  type    = bool
+  default = false
+}
 
 locals {
   iso_url      = "https://releases.ubuntu.com/24.04/ubuntu-24.04.4-live-server-amd64.iso"
@@ -273,6 +281,8 @@ build {
   }
 
   post-processor "vagrant" {
+    only                = var.enable_vagrant ? [] : ["__vagrant_disabled__"]
+    keep_input_artifact = var.keep_vagrant_input
     vagrantfile_template = "files/vagrantfile.template"
     output               = "${var.vm_name}-{{.Provider}}.box"
   }
