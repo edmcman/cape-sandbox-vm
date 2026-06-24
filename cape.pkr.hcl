@@ -14,7 +14,7 @@ packer {
     }
     vagrant = {
       source  = "github.com/hashicorp/vagrant"
-      version = ">= 1.1.7"
+      version = "~> 1"
     }
   }
 }
