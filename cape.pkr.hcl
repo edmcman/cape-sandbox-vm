@@ -12,6 +12,10 @@ packer {
       source  = "github.com/hashicorp/qemu"
       version = "~> 1"
     }
+    vagrant = {
+      source  = "github.com/hashicorp/vagrant"
+      version = ">= 1.1.7"
+    }
   }
 }
 
@@ -266,5 +270,10 @@ build {
   post-processor "shell-local" {
     only   = ["qemu.ubuntu"]
     inline = ["qemu-img snapshot -c clean-install output-qemu-cape/${var.vm_name}"]
+  }
+
+  post-processor "vagrant" {
+    vagrantfile_template = "files/vagrantfile.template"
+    output               = "${var.vm_name}-{{.Provider}}.box"
   }
 }
