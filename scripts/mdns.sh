@@ -14,13 +14,12 @@ EOF
 #
 # mDNS needs both the global setting above AND a per-link setting. The
 # per-link drop-in must match the systemd-networkd .network unit name
-# netplan generates (e.g. 10-netplan-ens32.network) -- only known at boot,
-# and it varies per builder (qemu/vmware/virtualbox use different NIC
-# drivers) and even per build host. Rather than guess it, install an
-# idempotent oneshot script + unit that discovers it fresh every boot.
-# Because it globs at runtime, it also never touches virbr-cape (the CAPE
-# analysis bridge), which libvirt manages directly and which never appears
-# under /run/systemd/network.
+# netplan generates (e.g. 10-netplan-eth0.network). The host NIC is pinned
+# to eth0 across all builders via net.ifnames=0 (see http/user-data), so the
+# name is consistent -- but we still glob rather than hard-code it, since
+# that also avoids touching virbr-cape (the CAPE analysis bridge), which
+# libvirt manages directly and which never appears under
+# /run/systemd/network.
 
 mkdir -p /usr/local/sbin
 cat > /usr/local/sbin/enable-mdns-links.sh <<'EOF'

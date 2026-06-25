@@ -38,6 +38,13 @@ autoinstall:
 
     - curtin in-target -- apt-get autoremove -y
 
+    # Force legacy eth0 interface naming (net.ifnames=0) so the host NIC name is
+    # identical across qemu/vmware/virtualbox builders. Drop-in is sourced after
+    # /etc/default/grub by grub-mkconfig; appends to GRUB_CMDLINE_LINUX_DEFAULT.
+    - >-
+      curtin in-target -- bash -c 'printf "%s\n" "GRUB_CMDLINE_LINUX_DEFAULT=\"\$GRUB_CMDLINE_LINUX_DEFAULT net.ifnames=0 biosdevname=0\"" > /etc/default/grub.d/eth0.cfg'
+    - curtin in-target -- update-grub
+
   error-commands:
     - tar -czf /run/installer-logs.tar.gz /var/log/installer/ /var/log/subiquity.log /var/log/cloud-init*.log /var/log/casper.log 2>/dev/null || true
     - journalctl -b --no-pager > /run/installer-journal.txt 2>/dev/null || true
