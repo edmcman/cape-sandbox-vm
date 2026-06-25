@@ -108,14 +108,12 @@ source "vmware-iso" "ubuntu" {
   shutdown_command = "echo '${var.ssh_password}' | sudo -S shutdown -P now"
   output_directory = "output-vmware-cape"
   # Expose VMX instructions to the guest for nested KVM
-  vhv_enabled                = true
+  vhv_enabled = true
   vmx_data = {
     "ethernet0.pciSlotNumber" = "32"
-    # Serial port for installer debug output
-    "serial0.present"         = "TRUE"
-    "serial0.fileType"        = "file"
-    "serial0.fileName"        = "serial.log"
   }
+  # Serial port for installer debug output (native option, not vmx_data)
+  serial                         = "FILE:serial.log"
   vmx_remove_ethernet_interfaces = false
   snapshot_name                  = "clean-install"
 }
@@ -156,12 +154,12 @@ source "virtualbox-iso" "ubuntu" {
 }
 
 source "qemu" "ubuntu" {
-  vm_name          = var.vm_name
-  headless         = var.headless
-  http_directory   = "http"
-  iso_url          = local.iso_url
-  iso_checksum     = local.iso_checksum
-  disk_size        = "${var.disk_size}M"
+  vm_name        = var.vm_name
+  headless       = var.headless
+  http_directory = "http"
+  iso_url        = local.iso_url
+  iso_checksum   = local.iso_checksum
+  disk_size      = "${var.disk_size}M"
   # KVM required on build host; -cpu host exposes VMX for nested KVM in guest
   accelerator      = "kvm"
   machine_type     = "q35"
@@ -281,8 +279,8 @@ build {
   }
 
   post-processor "vagrant" {
-    only                = var.enable_vagrant ? [] : ["__vagrant_disabled__"]
-    keep_input_artifact = var.keep_vagrant_input
+    only                 = var.enable_vagrant ? [] : ["__vagrant_disabled__"]
+    keep_input_artifact  = var.keep_vagrant_input
     vagrantfile_template = "files/vagrantfile.template"
     output               = "${var.vm_name}-{{.Provider}}.box"
   }
