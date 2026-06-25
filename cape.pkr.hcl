@@ -83,7 +83,7 @@ locals {
   # Ubuntu 24.04 server ISO uses GRUB; 'c' drops to GRUB console
   boot_command = [
     "c<wait>",
-    "linux /casper/vmlinuz autoinstall ds='nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/' systemd.mask=ssh console=ttyS0",
+    "linux /casper/vmlinuz autoinstall ds='nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/' systemd.mask=ssh console=ttyS0 net.ifnames=0 biosdevname=0",
     "<enter><wait>",
     "initrd /casper/initrd<enter><wait>",
     "boot<enter>"
