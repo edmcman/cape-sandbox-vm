@@ -1,4 +1,8 @@
-#!/bin/bash -eux
+#!/bin/bash
+
+set -euxo pipefail
+
+systemctl start libvirtd.service
 
 # Define the CAPE analysis network via libvirt (192.168.56.0/24, NAT).
 # DHCP reservation ensures the guest gets the right IP even if Windows
