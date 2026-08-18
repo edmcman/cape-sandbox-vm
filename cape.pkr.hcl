@@ -268,6 +268,27 @@ build {
     ]
   }
 
+  provisioner "file" {
+    source      = "files/cape-win10-snapshot-check.sh.tmpl"
+    destination = "/tmp/cape-win10-snapshot-check.sh.tmpl"
+  }
+
+  provisioner "file" {
+    source      = "files/cape-win10-snapshot-check.service"
+    destination = "/tmp/cape-win10-snapshot-check.service"
+  }
+
+  provisioner "shell" {
+    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
+    inline = [
+      "sed 's|CAPE_WIN10_GUEST_IP|${var.win10_guest_ip}|g' /tmp/cape-win10-snapshot-check.sh.tmpl > /usr/local/sbin/cape-win10-snapshot-check.sh",
+      "chmod 755 /usr/local/sbin/cape-win10-snapshot-check.sh",
+      "cp /tmp/cape-win10-snapshot-check.service /etc/systemd/system/cape-win10-snapshot-check.service",
+      "systemctl enable cape-win10-snapshot-check.service",
+      "rm -f /tmp/cape-win10-snapshot-check.sh.tmpl /tmp/cape-win10-snapshot-check.service",
+    ]
+  }
+
   provisioner "shell" {
     execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
     scripts         = ["scripts/cleanup.sh"]

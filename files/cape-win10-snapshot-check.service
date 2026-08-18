@@ -1,0 +1,15 @@
+[Unit]
+Description=Regenerate cape-win10 CAPE analysis snapshot if incompatible with this host's CPU
+After=virtqemud.service network-online.target
+Before=cape.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/cape-win10-snapshot-check.sh
+RemainAfterExit=yes
+TimeoutStartSec=900
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

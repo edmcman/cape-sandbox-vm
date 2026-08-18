@@ -21,6 +21,7 @@ CAPEv2/                 # Git submodule — upstream CAPEv2 source, do not modif
 auto-windows-vm/        # Git submodule — builds the Windows 10 analysis guest QCOW2
 http/                   # cloud-init user-data/meta-data for Ubuntu autoinstall
 files/                  # cape-win10.xml.tmpl — libvirt domain XML template
+                        # cape-win10-snapshot-check.sh.tmpl + .service — first-boot snapshot self-heal (see below)
 ```
 
 ## Build order
@@ -44,6 +45,16 @@ The CAPE build uploads the CAPEv2 submodule and `conf-overrides/` as tarballs, r
 - Guest MAC: `52:54:00:ca:fe:10` (must match `win10_guest_mac` in both builds)
 
 `win10_guest_mac` and `win10_guest_ip` in `variables.pkrvars.hcl` must stay in sync with the values baked into the Windows guest — changing them requires rebuilding both images.
+
+## `cape-ready` snapshot portability
+
+`cape-win10`'s CPU is `mode='host-passthrough' check='none'` (`files/cape-win10.xml.tmpl`) — QEMU gets `-cpu host` directly, with no libvirt-side translation into a named model. This matters because `mode='host-model'` (the more commonly recommended default) gets translated by libvirt into a concrete `mode='custom'` spec (nearest named model + explicit `<feature policy='require'>` list) before it's validated/started, and that translated form is what ends up embedded in a snapshot's XML and — critically — becomes the domain's new *persistent* definition after any successful `virsh snapshot-revert` (revert restores the full domain config from the snapshot, not just disk/memory). That silently downgrades an adaptive `host-model` domain to a static one pinned to whatever host most recently reverted successfully, breaking future adaptability. `host-passthrough` has no translated form to freeze, so a revert always restores `host-passthrough` again. `cape-win10` never migrates between physical hosts, so `host-model`'s only advantage (safe cross-host migration compatibility checking) doesn't apply here.
+
+This doesn't remove the need to keep the `cape-ready` snapshot itself in sync with whatever host is running it: the snapshot taken during the build (`cape.pkr.hcl`, `virsh snapshot-create-as ... --live`) is a **live memory snapshot**, so it still freezes the register/execution state of the *build host*, and restoring that on a host missing a feature the build host had still fails with `guest CPU doesn't match specification: missing features: ...` — that part is inherent to restoring saved live state on different silicon, independent of CPU mode.
+
+Do not "fix" this by pinning a specific CPU model via `mode='custom'` in `cape-win10.xml.tmpl` — that just trades one hardcoded baseline for another and still caps every recipient at whatever model is picked. Instead, `files/cape-win10-snapshot-check.sh.tmpl` + `files/cape-win10-snapshot-check.service` are installed and enabled at build time (see the provisioners after the snapshot-create step in `cape.pkr.hcl`) to self-heal: the service runs `Before=cape.service` on **every boot**, tries a normal revert, and if that fails, cold-boots the Windows guest and rebuilds `cape-ready` locally so it matches whatever CPU is really there. A compatible snapshot reverts in seconds, so checking every boot is cheap in the common case.
+
+Deliberately no one-shot "already checked" marker: `combined-vm` clones this VM's output and genuinely boots it (via Packer's `vmware-vmx`/`qemu`/`virtualbox-ovf` builders) to install the agent container, which would count as the "first boot" and let a marker get baked into the shipped image on the *build* machine — permanently disabling the self-heal for actual recipients. Checking unconditionally on every boot sidesteps that class of bug entirely and also means a VM whose files get copied to genuinely different hardware later re-validates automatically.
 
 ## CAPE config overrides
 

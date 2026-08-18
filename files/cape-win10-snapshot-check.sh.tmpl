@@ -1,0 +1,71 @@
+#!/bin/bash
+# Ensures the cape-win10 "cape-ready" live snapshot can actually resume on
+# this machine. It's a live memory snapshot, so it freezes the register/
+# execution state of whatever host built it -- a snapshot baked on the Packer
+# build host (or on whatever machine last booted this VM) may require CPU
+# features a recipient's hardware (or hypervisor-exposed virtual CPU) doesn't
+# have. Runs on every boot via
+# cape-win10-snapshot-check.service, before cape.service: a compatible
+# snapshot reverts in seconds, so checking every boot is cheap in the common
+# case, and it self-heals automatically the moment the VM ends up on
+# incompatible (or different) hardware -- no one-shot marker to go stale or
+# get baked into an image by an intermediate build/packaging step that also
+# happens to boot the VM.
+set -euo pipefail
+
+echo "Waiting for /dev/kvm (kvm module loads asynchronously via udev)..."
+if ! timeout 60 bash -c 'until [ -e /dev/kvm ]; do sleep 1; done'; then
+    echo "ERROR: /dev/kvm did not appear within 60s; KVM acceleration is unavailable." >&2
+    exit 1
+fi
+
+DOMAIN=cape-win10
+SNAPSHOT=cape-ready
+GUEST_IP=CAPE_WIN10_GUEST_IP
+MEM_DIR=/var/lib/libvirt/qemu/snapshot/cape-win10
+
+wait_for_agent() {
+    echo "Waiting for CAPE agent on ${GUEST_IP}:8000..."
+    if ! timeout 600 bash -c "until nc -z ${GUEST_IP} 8000 2>/dev/null; do sleep 5; done"; then
+        echo "ERROR: CAPE agent on ${GUEST_IP}:8000 did not come up within 600s." >&2
+        exit 1
+    fi
+    echo "CAPE agent on ${GUEST_IP}:8000 is up."
+}
+
+rebuild_snapshot() {
+    local suffix
+    suffix=$(date +%s)
+    echo "Rebuilding ${SNAPSHOT} snapshot locally for this host's CPU..."
+    virsh destroy "$DOMAIN" >/dev/null 2>&1 || true
+    virsh snapshot-delete "$DOMAIN" "$SNAPSHOT" --metadata 2>/dev/null || true
+    echo "Cold-booting ${DOMAIN}..."
+    virsh start "$DOMAIN"
+    wait_for_agent
+    mkdir -p "$MEM_DIR"
+    echo "Creating new ${SNAPSHOT} snapshot from the running guest..."
+    # New file names every time: libvirt won't overwrite existing external
+    # snapshot files, and the previous ones remain backing files in the
+    # active disk's chain -- they must not be deleted.
+    virsh snapshot-create-as --domain "$DOMAIN" --name "$SNAPSHOT" \
+        --description "CAPE analysis baseline (rebuilt on deploy)" \
+        --memspec "file=${MEM_DIR}/${SNAPSHOT}-${suffix}.mem,snapshot=external" \
+        --diskspec "sda,snapshot=external,file=/var/lib/libvirt/images/${DOMAIN}.${SNAPSHOT}-${suffix}" \
+        --live
+    virsh destroy "$DOMAIN"
+    echo "Verifying the rebuilt ${SNAPSHOT} snapshot reverts cleanly..."
+    virsh snapshot-revert "$DOMAIN" "$SNAPSHOT" --running
+    wait_for_agent
+    virsh destroy "$DOMAIN"
+    echo "SUCCESS: ${SNAPSHOT} snapshot regenerated."
+}
+
+echo "Checking whether the ${SNAPSHOT} snapshot is compatible with this host..."
+if virsh snapshot-revert "$DOMAIN" "$SNAPSHOT" --running 2>/tmp/cape-win10-revert.err; then
+    virsh destroy "$DOMAIN"
+    echo "SUCCESS: ${SNAPSHOT} snapshot reverts cleanly."
+else
+    echo "ERROR: revert failed; ${SNAPSHOT} snapshot is not compatible with this host's CPU:" >&2
+    cat /tmp/cape-win10-revert.err >&2 || true
+    rebuild_snapshot
+fi

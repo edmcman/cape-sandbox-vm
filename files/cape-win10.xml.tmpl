@@ -22,7 +22,7 @@
       <spinlocks state='on' retries='8191'/>
     </hyperv>
   </features>
-  <cpu mode='host-model'>
+  <cpu mode='host-passthrough' check='none'>
     <feature policy='disable' name='hypervisor'/>
   </cpu>
   <clock offset='localtime'>
