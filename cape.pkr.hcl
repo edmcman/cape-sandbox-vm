@@ -255,19 +255,6 @@ build {
     ]
   }
 
-  provisioner "shell" {
-    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
-    inline = [
-      "virsh start cape-win10",
-      "echo 'Waiting for CAPE agent on ${var.win10_guest_ip}:8000...'",
-      "timeout 300 bash -c 'until nc -z ${var.win10_guest_ip} 8000 2>/dev/null; do sleep 5; done' || echo 'WARNING: CAPE agent did not respond on ${var.win10_guest_ip}:8000 within 300s -- snapshot will be taken without a running agent'",
-      "mkdir -p /var/lib/libvirt/qemu/snapshot/cape-win10",
-      "virsh snapshot-create-as --domain cape-win10 --name cape-ready --description 'CAPE analysis baseline' --memspec file=/var/lib/libvirt/qemu/snapshot/cape-win10/cape-ready.mem,snapshot=external --diskspec sda,snapshot=external --live",
-      "virsh shutdown --domain cape-win10 --mode acpi",
-      "timeout 120 bash -c 'until virsh domstate cape-win10 | grep -q \"shut off\"; do sleep 3; done'",
-    ]
-  }
-
   provisioner "file" {
     source      = "files/cape-win10-snapshot-check.sh.tmpl"
     destination = "/tmp/cape-win10-snapshot-check.sh.tmpl"

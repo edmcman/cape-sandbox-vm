@@ -43,7 +43,7 @@ Requires [Packer](https://developer.hashicorp.com/packer/install) ≥ 1.9, [Json
    packer build -only='cape-sandbox.virtualbox-iso.ubuntu' -var-file=variables.pkrvars.hcl .
    ```
 
-   The build registers the Windows guest with libvirt, takes the analysis snapshot, and configures CAPE automatically.
+   The build registers the Windows guest with libvirt and configures CAPE automatically. The analysis snapshot (`cape-ready`) is taken lazily on first boot by a self-healing service (see below).
 
 6. **Boot the VM** in your hypervisor. The web UI is at `http://cape-sandbox.local:8000` (via mDNS) or `http://<vm-ip>:8000`.
 
