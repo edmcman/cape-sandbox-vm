@@ -77,6 +77,8 @@ variable "keep_vagrant_input" {
 }
 
 locals {
+  win10_qcow2_path = "/var/lib/libvirt/images/cape-win10.qcow2"
+
   iso_url      = "https://releases.ubuntu.com/24.04/ubuntu-24.04.4-live-server-amd64.iso"
   iso_checksum = "sha256:e907d92eeec9df64163a7e454cbc8d7755e8ddc7ed42f99dbc80c40f1a138433"
 
@@ -230,8 +232,11 @@ build {
   }
 
   provisioner "file" {
-    source      = "files/cape-win10.xml.tmpl"
-    destination = "/tmp/cape-win10.xml.tmpl"
+    content = templatefile("files/cape-win10.xml.pkrtpl.hcl", {
+      qcow2_path = local.win10_qcow2_path
+      guest_mac  = var.win10_guest_mac
+    })
+    destination = "/tmp/cape-win10.xml"
   }
 
   provisioner "shell" {
@@ -246,12 +251,12 @@ build {
   provisioner "shell" {
     execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
     inline = [
-      "cp /tmp/win-guest/cape-win10 /var/lib/libvirt/images/cape-win10.qcow2",
-      "chown libvirt-qemu:libvirt-qemu /var/lib/libvirt/images/cape-win10.qcow2 2>/dev/null || true",
+      "cp /tmp/win-guest/cape-win10 ${local.win10_qcow2_path}",
+      "chown libvirt-qemu:libvirt-qemu ${local.win10_qcow2_path} 2>/dev/null || true",
       "mkdir -p /var/lib/libvirt/qemu/nvram",
       "cp /tmp/win-guest/efivars.fd /var/lib/libvirt/qemu/nvram/cape-win10_VARS.fd",
-      "sed 's|CAPE_QCOW2_PATH|/var/lib/libvirt/images/cape-win10.qcow2|g; s|CAPE_WIN10_GUEST_MAC|${var.win10_guest_mac}|g' /tmp/cape-win10.xml.tmpl | virsh define /dev/stdin",
-      "rm -rf /tmp/win-guest /tmp/cape-win10.xml.tmpl",
+      "virsh define /tmp/cape-win10.xml",
+      "rm -rf /tmp/win-guest /tmp/cape-win10.xml",
     ]
   }
 
@@ -273,6 +278,23 @@ build {
       "cp /tmp/cape-win10-snapshot-check.service /etc/systemd/system/cape-win10-snapshot-check.service",
       "systemctl enable cape-win10-snapshot-check.service",
       "rm -f /tmp/cape-win10-snapshot-check.sh.tmpl /tmp/cape-win10-snapshot-check.service",
+    ]
+  }
+
+  provisioner "file" {
+    content = templatefile("files/cape-sandbox-vm.conf.pkrtpl.hcl", {
+      guest_ip      = var.win10_guest_ip
+      guest_gateway = var.win10_guest_gateway
+      guest_mac     = var.win10_guest_mac
+    })
+    destination = "/tmp/cape-sandbox-vm.conf"
+  }
+
+  provisioner "shell" {
+    execute_command = "echo '${var.ssh_password}' | {{.Vars}} sudo -E -S bash '{{.Path}}'"
+    inline = [
+      "install -m 644 /tmp/cape-sandbox-vm.conf /etc/cape-sandbox-vm.conf",
+      "rm -f /tmp/cape-sandbox-vm.conf",
     ]
   }
 

@@ -36,13 +36,13 @@
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <!-- Replaced by import-guest.sh -->
-      <source file='CAPE_QCOW2_PATH'/>
+      <source file='${qcow2_path}'/>
       <target dev='sda' bus='sata'/>
     </disk>
     <interface type='network'>
       <!-- Attaches to the 192.168.56.0/24 analysis network -->
       <!-- MAC must match win10_guest_mac in variables.pkrvars.hcl and cape-win10.jsonnet -->
-      <mac address='CAPE_WIN10_GUEST_MAC'/>
+      <mac address='${guest_mac}'/>
       <source network='cape'/>
       <model type='e1000e'/>
     </interface>
