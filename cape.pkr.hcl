@@ -99,7 +99,7 @@ source "vmware-iso" "ubuntu" {
   iso_checksum     = local.iso_checksum
   disk_size        = var.disk_size
   memory           = var.memory
-  cores            = var.cpus
+  cpus            = var.cpus
   boot_wait        = "5s"
   boot_command     = local.boot_command
   ssh_username     = var.ssh_username
