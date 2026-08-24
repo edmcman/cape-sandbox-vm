@@ -7,7 +7,12 @@ set -euxo pipefail
 # standalone service binds port 53 on every address and conflicts with
 # systemd-resolved's loopback listeners.  Libvirt starts its own instances
 # below, scoped to virbr-cape (and any other libvirt-managed bridge).
-systemctl disable --now dnsmasq.service
+# The dnsmasq package is pulled in as a dependency later in the build, so the
+# unit does not exist yet here -- mask it preemptively (masking an unknown unit
+# is fine, and deb-systemd-invoke skips masked units) rather than disabling it,
+# which would both fail now and be undone by the later install.
+systemctl mask dnsmasq.service
+systemctl stop dnsmasq.service || true
 systemctl reset-failed dnsmasq.service || true
 
 systemctl start libvirtd.service
