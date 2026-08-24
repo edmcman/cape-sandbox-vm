@@ -2,6 +2,14 @@
 
 set -euxo pipefail
 
+# CAPE needs the dnsmasq binary for libvirt's per-network DNS/DHCP
+# processes, but not the distribution's standalone dnsmasq service.  The
+# standalone service binds port 53 on every address and conflicts with
+# systemd-resolved's loopback listeners.  Libvirt starts its own instances
+# below, scoped to virbr-cape (and any other libvirt-managed bridge).
+systemctl disable --now dnsmasq.service
+systemctl reset-failed dnsmasq.service || true
+
 systemctl start libvirtd.service
 
 # Define the CAPE analysis network via libvirt (192.168.56.0/24, NAT).
