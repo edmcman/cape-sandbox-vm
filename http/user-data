@@ -43,6 +43,14 @@ autoinstall:
     # /etc/default/grub by grub-mkconfig; appends to GRUB_CMDLINE_LINUX_DEFAULT.
     - >-
       curtin in-target -- bash -c 'printf "%s\n" "GRUB_CMDLINE_LINUX_DEFAULT=\"\$GRUB_CMDLINE_LINUX_DEFAULT net.ifnames=0 biosdevname=0\"" > /etc/default/grub.d/eth0.cfg'
+
+    # The installer uses ttyS0 as its primary console so headless builds retain
+    # complete logs. Keep that serial console in the installed VM, but append
+    # tty0 last so /dev/console (including systemd service output) is displayed
+    # in the hypervisor's graphical console. The zz prefix makes this the last
+    # GRUB defaults drop-in even after the custom eth0.cfg above.
+    - >-
+      curtin in-target -- bash -c 'printf "%s\n" "GRUB_CMDLINE_LINUX_DEFAULT=\"\$GRUB_CMDLINE_LINUX_DEFAULT console=tty0\"" > /etc/default/grub.d/zz-display-console.cfg'
     - curtin in-target -- update-grub
 
   error-commands:
