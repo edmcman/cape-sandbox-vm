@@ -3,6 +3,13 @@
 # Enable systemd-resolved's native mDNS responder (replaces avahi-daemon).
 # Lighter weight than avahi; avoids a second daemon competing for UDP 5353.
 
+# CAPE's wkhtmltopdf dependency can pull avahi-daemon in later via package
+# recommendations. Pre-mask both activation paths so that installing the
+# package cannot start a second mDNS responder alongside systemd-resolved.
+# Keep the package and its libraries installed for dependency compatibility.
+systemctl disable --now avahi-daemon.service avahi-daemon.socket 2>/dev/null || true
+systemctl mask avahi-daemon.service avahi-daemon.socket
+
 # 1. Global enable via a drop-in (avoid hand-editing resolved.conf directly).
 mkdir -p /etc/systemd/resolved.conf.d
 cat > /etc/systemd/resolved.conf.d/mdns.conf <<'EOF'
