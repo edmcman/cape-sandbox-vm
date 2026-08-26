@@ -36,7 +36,7 @@ wait_for_agent() {
 rebuild_snapshot() {
     local suffix
     suffix=$(date +%s)
-    echo "Rebuilding ${SNAPSHOT} snapshot locally for this host's CPU..."
+    echo "Rebuilding ${SNAPSHOT} snapshot locally for this host's CPU; this may take a few minutes..."
     virsh destroy "$DOMAIN" >/dev/null 2>&1 || true
     virsh snapshot-delete "$DOMAIN" "$SNAPSHOT" --metadata 2>/dev/null || true
     echo "Cold-booting ${DOMAIN}..."
