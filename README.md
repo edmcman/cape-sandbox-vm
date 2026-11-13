@@ -57,6 +57,14 @@ All settings have working defaults. To customize before building:
 
 The Windows guest network settings (`win10_guest_*`) in `variables.pkrvars.hcl` must stay in sync with the values baked into the Windows guest image — if you change them, rebuild both images.
 
+Every Windows template accepts the top-level Jsonnet parameter `disable_updates`. It defaults to `true` for the CAPE templates and `false` for all other templates. When enabled, it skips the explicit Windows Update installation and suppresses Windows Update, Edge Update, and Google/Chrome updater clients without blocking Microsoft or Google domains.
+
+To retain updater behavior in the CAPE Windows guest:
+
+```sh
+jsonnet --tla-code disable_updates=false auto-windows-vm/packer-templates/cape-win10.jsonnet
+```
+
 ### Output format (Vagrant box)
 
 By default the build leaves the raw builder artifacts in `output-*/` (the `cape-sandbox` qcow2/vmdk/vdi plus the `clean-install` snapshot). To instead package the VM into a Vagrant `.box` (libvirt/VirtualBox/vmware, with nested virt enabled via `files/vagrantfile.template`), add `-var enable_vagrant=true`, e.g.,:
