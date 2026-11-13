@@ -4,6 +4,10 @@
 # kvm-qemu.sh: compiles QEMU/libvirt with anti-VM-detection patches
 # cape2.sh: installs CAPEv2, MongoDB, dependencies, systemd services
 
+set -o pipefail
+install -m 600 /dev/null /var/log/cape-install.log
+exec > >(tee -a /var/log/cape-install.log) 2>&1
+
 CAPE_ROOT="${CAPE_ROOT:-/opt/CAPEv2}"
 
 # OVMF must match the firmware used by auto-windows-vm (OVMF_CODE_4M.ms.fd)
@@ -18,6 +22,7 @@ bash -x kvm-qemu.sh all
 # a CLI arg, not an env var — the env var sets USE_UV but never updates PYTHON_MGR).
 cd "$CAPE_ROOT/installer"
 bash -x cape2.sh base 192.168.56.1 --use-uv
+test -x /usr/local/bin/uv || { echo 'CAPE installer did not install /usr/local/bin/uv' >&2; exit 1; }
 
 # Create dedicated analysis user account
 useradd -m -s /bin/bash cape-analysis || true
