@@ -24,6 +24,13 @@ cd "$CAPE_ROOT/installer"
 bash -x cape2.sh base 192.168.56.1 --use-uv
 test -x /usr/local/bin/uv || { echo 'CAPE installer did not install /usr/local/bin/uv' >&2; exit 1; }
 
+# Services use the environment installed at build time, including when offline.
+for service in cape cape-rooter cape-processor cape-web; do
+    install -d "/etc/systemd/system/${service}.service.d"
+    printf '[Service]\nEnvironment=UV_NO_SYNC=1\n' > "/etc/systemd/system/${service}.service.d/offline.conf"
+done
+systemctl daemon-reload
+
 # Create dedicated analysis user account
 useradd -m -s /bin/bash cape-analysis || true
 echo "cape-analysis:cape" | chpasswd
